@@ -104,6 +104,9 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float> > ValueMaps_ChargedHadrons_;
   edm::EDGetTokenT<edm::ValueMap<float> > ValueMaps_NeutralHadrons_;
   edm::EDGetTokenT<edm::ValueMap<float> > ValueMaps_Photons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > ValueMaps_Mini_ChargedHadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > ValueMaps_Mini_NeutralHadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > ValueMaps_Mini_Photons_;
   
   TTree *electronTree_;
   
@@ -147,6 +150,9 @@ private:
   Float_t sumChargedHadronPt_CITK;
   Float_t sumNeutralHadronPt_CITK;
   Float_t sumPhotonPt_CITK;
+  Float_t sumMiniChargedHadronPt_CITK;
+  Float_t sumMiniNeutralHadronPt_CITK;
+  Float_t sumMiniPhotonPt_CITK;
   
   //PUPPI
   Float_t sumChargedHadronPt_PUPPI;
@@ -163,6 +169,9 @@ private:
   Float_t relisoChargedHadronPt_CITK;
   Float_t relisoNeutralHadronPt_CITK;
   Float_t relisoPhotonPt_CITK;
+  Float_t relisoMiniChargedHadronPt_CITK;
+  Float_t relisoMiniNeutralHadronPt_CITK;
+  Float_t relisoMiniPhotonPt_CITK;
   
   bool isEB;
 };
@@ -198,10 +207,10 @@ ElectronNtupler_CITK::ElectronNtupler_CITK(const edm::ParameterSet& iConfig):
   //CITK
   ValueMaps_ChargedHadrons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_ChargedHadrons_src" ) ) ),
   ValueMaps_NeutralHadrons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_NeutralHadrons_src" ) ) ),
-  ValueMaps_Photons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_Photons_src" ) ) )
-
-{
-
+  ValueMaps_Photons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_Photons_src" ) ) ),
+  ValueMaps_Mini_ChargedHadrons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_Mini_ChargedHadrons_src" ) ) ),
+  ValueMaps_Mini_NeutralHadrons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_Mini_NeutralHadrons_src" ) ) ),
+  ValueMaps_Mini_Photons_(consumes<edm::ValueMap<float> > (iConfig.getParameter<edm::InputTag>( "ValueMaps_Mini_Photons_src" ) ) ){
   edm::Service<TFileService> fs;
   electronTree_ = fs->make<TTree> ("ElectronTree", "Electron data");
   
@@ -243,10 +252,16 @@ ElectronNtupler_CITK::ElectronNtupler_CITK(const edm::ParameterSet& iConfig):
   electronTree_ -> Branch("sumChargedHadronPt_CITK", &sumChargedHadronPt_CITK, "sumChargedHadronPt_CITK/F");
   electronTree_ -> Branch("sumNeutralHadronPt_CITK", &sumNeutralHadronPt_CITK, "sumNeutralHadronPt_CITK/F");
   electronTree_ -> Branch("sumPhotonPt_CITK", &sumPhotonPt_CITK, "sumPhotonPt_CITK/F");
+  electronTree_ -> Branch("sumMiniChargedHadronPt_CITK", &sumMiniChargedHadronPt_CITK, "sumMiniChargedHadronPt_CITK/F");
+  electronTree_ -> Branch("sumMiniNeutralHadronPt_CITK", &sumMiniNeutralHadronPt_CITK, "sumMiniNeutralHadronPt_CITK/F");
+  electronTree_ -> Branch("sumMiniPhotonPt_CITK", &sumMiniPhotonPt_CITK, "sumMiniPhotonPt_CITK/F");
     
   electronTree_ -> Branch("relisoChargedHadronPt_CITK", &relisoChargedHadronPt_CITK, "relisoChargedHadronPt_CITK/F");
   electronTree_ -> Branch("relisoNeutralHadronPt_CITK", &relisoNeutralHadronPt_CITK, "relisoNeutralHadronPt_CITK/F");
   electronTree_ -> Branch("relisoPhotonPt_CITK", &relisoPhotonPt_CITK, "relisoPhotonPt_CITK/F");
+  electronTree_ -> Branch("relisoMiniChargedHadronPt_CITK", &relisoMiniChargedHadronPt_CITK, "relisoMiniChargedHadronPt_CITK/F");
+  electronTree_ -> Branch("relisoMiniNeutralHadronPt_CITK", &relisoMiniNeutralHadronPt_CITK, "relisoMiniNeutralHadronPt_CITK/F");
+  electronTree_ -> Branch("relisoMiniPhotonPt_CITK", &relisoMiniPhotonPt_CITK, "relisoMiniPhotonPt_CITK/F");
   
   electronTree_ -> Branch("isEB", &isEB, "isEB/B");
 
@@ -328,6 +343,7 @@ ElectronNtupler_CITK::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     
   //CITK
   Handle <edm::ValueMap <float> > ValueMaps_ChargedHadrons, ValueMaps_NeutralHadrons, ValueMaps_Photons;
+  Handle <edm::ValueMap <float> > ValueMaps_Mini_ChargedHadrons, ValueMaps_Mini_NeutralHadrons, ValueMaps_Mini_Photons;
   Handle <edm::ValueMap <float> > ValueMaps_PUPPI_ChargedHadrons, ValueMaps_PUPPI_NeutralHadrons, ValueMaps_PUPPI_Photons;
   Handle <edm::ValueMap <float> > ValueMaps_PUPPI_NoLeptons_ChargedHadrons, ValueMaps_PUPPI_NoLeptons_NeutralHadrons, ValueMaps_PUPPI_NoLeptons_Photons;
   
@@ -335,6 +351,9 @@ ElectronNtupler_CITK::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken( ValueMaps_ChargedHadrons_ , ValueMaps_ChargedHadrons);
   iEvent.getByToken( ValueMaps_NeutralHadrons_ , ValueMaps_NeutralHadrons);
   iEvent.getByToken( ValueMaps_Photons_ , ValueMaps_Photons);
+  iEvent.getByToken( ValueMaps_Mini_ChargedHadrons_ , ValueMaps_Mini_ChargedHadrons);
+  iEvent.getByToken( ValueMaps_Mini_NeutralHadrons_ , ValueMaps_Mini_NeutralHadrons);
+  iEvent.getByToken( ValueMaps_Mini_Photons_ , ValueMaps_Mini_Photons);
 
 
   //
@@ -429,10 +448,16 @@ ElectronNtupler_CITK::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     sumChargedHadronPt_CITK =  (*ValueMaps_ChargedHadrons)[elePtr];
     sumNeutralHadronPt_CITK =  (*ValueMaps_NeutralHadrons)[elePtr];
     sumPhotonPt_CITK        =  (*ValueMaps_Photons)[elePtr];
+    sumMiniChargedHadronPt_CITK =  (*ValueMaps_Mini_ChargedHadrons)[elePtr];
+    sumMiniNeutralHadronPt_CITK =  (*ValueMaps_Mini_NeutralHadrons)[elePtr];
+    sumMiniPhotonPt_CITK        =  (*ValueMaps_Mini_Photons)[elePtr];
   
     relisoChargedHadronPt_CITK = sumChargedHadronPt_CITK/pt_;
     relisoNeutralHadronPt_CITK = sumNeutralHadronPt_CITK/pt_;
     relisoPhotonPt_CITK = sumPhotonPt_CITK/pt_;
+    relisoMiniChargedHadronPt_CITK = sumMiniChargedHadronPt_CITK/pt_;
+    relisoMiniNeutralHadronPt_CITK = sumMiniNeutralHadronPt_CITK/pt_;
+    relisoMiniPhotonPt_CITK = sumMiniPhotonPt_CITK/pt_;
     
     
     const reco::CaloClusterPtr& seed = eleGsfPtr -> superCluster()->seed();
